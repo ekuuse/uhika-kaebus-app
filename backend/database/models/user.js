@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
-    "users",
+    "User",
     {
       id: {
         type: DataTypes.INTEGER,
@@ -40,12 +40,20 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "user",
       },
+      room_nr: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "Room",
+          key: "room_nr",
+        },
+      },
     },
     {
-      tableName: "users",
+      tableName: "User",
       freezeTableName: true,
       timestamps: false,
-    }
+    },
   );
   return User;
 };

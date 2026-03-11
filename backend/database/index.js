@@ -33,6 +33,42 @@ fs.readdirSync(__dirname + '/models').forEach(file => {
   models[model.name] = model;
 });
 
+console.log(Object.keys(models));
+
+const { User, Room, Complaint, ComplaintRoom } = models;
+
+// ROOM - USER
+Room.hasMany(User, {
+  foreignKey: "room_nr",
+});
+
+User.belongsTo(Room, {
+  foreignKey: "room_nr",
+});
+
+
+// USER - COMPLAINT
+User.hasMany(Complaint, {
+  foreignKey: "user_id",
+});
+
+Complaint.belongsTo(User, {
+  foreignKey: "user_id",
+});
+
+// COMPLAINT - ROOMS 
+Room.belongsToMany(Complaint, {
+  through: ComplaintRoom,
+  foreignKey: "room_nr",
+});
+
+Complaint.belongsToMany(Room, {
+  through: ComplaintRoom,
+  foreignKey: "complaint_id",
+});
+
+
+
 Object.keys(models).forEach(modelName => {
   if (models[modelName].associate) {
     models[modelName].associate(models);

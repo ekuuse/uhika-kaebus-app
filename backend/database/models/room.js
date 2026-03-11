@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
     const Room = sequelize.define(
-        "rooms",
+        "Room",
         {
             room_nr: {
                 type: DataTypes.INTEGER,
@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
             },
         },
         {
-            tableName: "rooms",
+            tableName: "Room",
             freezeTableName: true,
             timestamps: false,
         }
