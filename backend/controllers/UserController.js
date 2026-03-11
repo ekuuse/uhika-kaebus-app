@@ -1,9 +1,11 @@
 const { models } = require("../database");
-const { Players, Pets, PetStats, Items, Inventory } = models;
+const { Users } = models;
 const BaseController = require("./BaseController");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+// const bcrypt = require("bcrypt");
 const crypto = require("crypto");
+const validator = require("validator");
+const { fn, col, where } = require("sequelize");
 const { PET_NAMES, PET_TYPES } = require("../config/config");
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -35,23 +37,44 @@ class userController extends BaseController {
           .json({ success: false, error: "Fields cannot be empty!" });
       }
 
-      if (!emailRegex.test(email)) {
-        return res
-          .status(400)
-          .json({ success: false, error: "Invalid email format" });
+      if (
+        typeof username !== "string" ||
+        typeof email !== "string" ||
+        typeof password !== "string" ||
+        !validator.isLength(username, { min: 3, max: 20 }) ||
+        !validator.matches(username, /^[a-zA-Z0-9_]+$/) ||
+        !validator.isEmail(email) ||
+        !validator.isLength(password, { min: 8 })
+      ) {
+        return res.status(400).json({ message: "Invalid input data." });
       }
 
+      // if (!emailRegex.test(email)) {
+      //  return res
+      //    .status(400)
+      //    .json({ success: false, error: "Invalid email format" });
+      //}
+
       // add error if many same usernames 
+      const userExists = await Users.findOne({
+        where: where(fn("LOWER", col("username")), username.toLowerCase())
+      });
+
+      if (userExists) {
+        return res
+          .status(409)
+          .json({ success: false, error: "Username already taken!" })
+      }
 
       try {
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await Bun.password.hash(password, {
+          algorithm: "argon2id",
+        });
 
-        const user = await Players.create({
+        const user = await Users.create({
           username,
           email,
           password: hashedPassword,
-          money: 100,
-          last_updated: Date.now(),
         });
 
         const token = this.generateToken(user);
@@ -79,7 +102,7 @@ class userController extends BaseController {
 
   async Login(req, res) {
     this.handleRequest(req, res, async () => {
-      const { username, password } = req.body;
+      const { email, password } = req.body;
 
       if (!username || !password) {
         return res
@@ -88,7 +111,7 @@ class userController extends BaseController {
       }
 
       try {
-        const user = await Players.findOne({ where: { username } });
+        const user = await Users.findOne({ where: { username } });
 
         if (!user) {
           return res
@@ -96,7 +119,10 @@ class userController extends BaseController {
             .json({ success: false, error: "Invalid credentials" });
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await Bun.password.verify(
+          password,
+          user.password
+        );
 
         if (!isPasswordValid) {
           return res
