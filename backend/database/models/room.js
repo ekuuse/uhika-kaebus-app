@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
             },
             room_letter: {
-                type: DataTypes.enum("A", "B", "C"),
+                type: DataTypes.ENUM("A", "B", "C"),
                 allowNull: false,
             },
             floor: {

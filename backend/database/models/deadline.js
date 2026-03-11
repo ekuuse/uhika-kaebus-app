@@ -17,11 +17,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
       date: {
-        type: DataTypes.DATETIME,
+        type: DataTypes.DATE,
         allowNull: false,
       },
       type: {
-        type: DataTypes.ENUM("korduv","tähtis",null),
+        type: DataTypes.ENUM("korduv","tähtis"),
         allowNull: true,
       },
     },
