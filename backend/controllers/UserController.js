@@ -17,26 +17,29 @@ class userController extends BaseController {
   }
 
   generateToken(user) {
+    const secret = Bun.env.JWT_SECRET;
+    if (!secret) throw new Error("JWT_SECRET is not defined");
     return jwt.sign(
-      { id: user.user_id, username: user.username, email: user.email },
-      process.env.JWT_SECRET,
+      { id: user.id, username: user.username, email: user.email },
+      secret,
       { expiresIn: "24h" }
     );
   }
 
 
-
   async Register(req, res) {
     this.handleRequest(req, res, async () => {
-      const { email, password } = req.body;
+      const { first_name, last_name, email, password } = req.body;
 
-      if ( !email || !password) {
+      if ( !first_name || !last_name || !email || !password) {
         return res
           .status(400)
           .json({ success: false, error: "Fields cannot be empty!" });
       }
 
       if (
+        typeof first_name !== "string" ||
+        typeof last_name !== "string" ||
         typeof email !== "string" ||
         typeof password !== "string" ||
         !validator.isEmail(email) ||
@@ -70,9 +73,12 @@ class userController extends BaseController {
         });
 
         const user = await User.create({
+          first_name,
+          last_name,
           username,
           email,
           password: hashedPassword,
+          role: "User",
         });
 
         const token = this.generateToken(user);
@@ -100,16 +106,22 @@ class userController extends BaseController {
 
   async Login(req, res) {
     this.handleRequest(req, res, async () => {
-      const { email, password } = req.body;
+      const { accountname, password } = req.body;
 
-      if (!email || !password) {
+      if (!accountname || !password) {
         return res
           .status(400)
           .json({ success: false, error: "Fields cannot be empty!" });
       }
 
       try {
-        const user = await User.findOne({ where: { email } });
+        // Find by email or username
+        const isEmail = validator.isEmail(accountname);
+        const user = await User.findOne({
+          where: isEmail
+            ? where(fn("LOWER", col("email")), accountname.toLowerCase())
+            : where(fn("LOWER", col("username")), accountname.toLowerCase()),
+        });
 
         if (!user) {
           return res

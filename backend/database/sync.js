@@ -1,12 +1,11 @@
-require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME, 
-  process.env.DB_USER, 
-  process.env.DB_PASSWORD, 
+  Bun.env.DB_NAME, 
+  Bun.env.DB_USER, 
+  Bun.env.DB_PASSWORD, 
   {
-    host: process.env.DB_HOST,
+    host: Bun.env.DB_HOST,
     dialect: 'mysql',
   define: {
     freezeTableName: true,

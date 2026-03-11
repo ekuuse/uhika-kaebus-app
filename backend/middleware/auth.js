@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
 
 const checkAuthenticated = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -9,7 +8,7 @@ const checkAuthenticated = (req, res, next) => {
     return res.status(401).json({ message: 'You are not logged in', success: false });
   }
   
-  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+  jwt.verify(token, Bun.env.JWT_SECRET || 'your-secret-key', (err, user) => {
     if (err) {
       return res.status(401).json({ message: 'You are not logged in', success: false });
     }
