@@ -24,6 +24,8 @@ export default function RootLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
+
+      <Stack.Screen name="report/[korrus]" options={{ headerShown: false }} />
     </Stack>
   );
 }
