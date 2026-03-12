@@ -2,6 +2,7 @@ import Events from "@/components/Events";
 import EventsCalender from "@/components/EventsCalender";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { router } from "expo-router";
 import { Pressable, Text, View, Image, ScrollView } from "react-native";
 
 export default function Index() {
@@ -20,7 +21,14 @@ export default function Index() {
           <Text style={{ fontFamily: "Poppins_700", fontSize: 24, paddingTop: 48 }}>Valige korrus</Text>
 
           <View style={{ gap: 16, paddingTop: 16 }}>
-            <Pressable style={{ height: 48, backgroundColor: "#EEEEEE", borderRadius: 6, alignItems: "center", gap: 12, flexDirection: "row" }}>
+            <Pressable
+            onPress={() =>
+                                router.push({
+                                    pathname: "/report/[id]" as any,
+                                    params: { id: 5 },
+                                })
+                            } 
+            style={{ height: 48, backgroundColor: "#EEEEEE", borderRadius: 6, alignItems: "center", gap: 12, flexDirection: "row" }}>
               <View style={{ width: 18, borderRadius: 6, backgroundColor: "#50C800", height: "100%" }} />
               <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>5.korrus</Text>
             </Pressable>
