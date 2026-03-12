@@ -7,8 +7,6 @@ const crypto = require("crypto");
 const validator = require("validator");
 const { fn, col, where } = require("sequelize");
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 class userController extends BaseController {
   constructor() {
     super();
@@ -45,20 +43,15 @@ class userController extends BaseController {
         !validator.isEmail(email) ||
         !validator.isLength(password, { min: 8 })
       ) {
-        return res.status(400).json({ message: "Invalid input data." });
+        return res.status(400).json({ message: "Invalid register data, please check your formatting." });
       }
 
       const username = email.split("@")[0].toLowerCase();
       console.log(username)
-      // if (!emailRegex.test(email)) {
-      //  return res
-      //    .status(400)
-      //    .json({ success: false, error: "Invalid email format" });
-      //}
 
       // add error if many same usernames 
       const userExists = await User.findOne({
-        where: where(fn("LOWER", col("email")), email.toLowerCase())
+        where: where(fn("LOWER", col("username")), username.toLowerCase())
       });
 
       if (userExists) {
@@ -78,7 +71,8 @@ class userController extends BaseController {
           username,
           email,
           password: hashedPassword,
-          role: "User",
+          role: "user",
+          status: "pending",
         });
 
         const token = this.generateToken(user);
@@ -88,7 +82,7 @@ class userController extends BaseController {
           message: "User created and logged in.",
           token,
           user: {
-            id: user.user_id,
+            id: user.id,
             username: user.username,
             email: user.email,
           },
@@ -147,7 +141,7 @@ class userController extends BaseController {
           message: "User logged in.",
           token,
           user: {
-            id: user.user_id,
+            id: user.id,
             username: user.username,
             email: user.email,
           },

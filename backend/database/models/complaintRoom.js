@@ -10,8 +10,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         primaryKey: true,
       },
+      room_letter: {
+        type: DataTypes.ENUM("A", "B", "C"),
+        primaryKey: true,
+      },
     },
     {
+      tableName: "complaint_room",
       timestamps: false,
       freezeTableName: true,
     }

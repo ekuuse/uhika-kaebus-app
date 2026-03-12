@@ -36,6 +36,10 @@ console.log(Object.keys(models));
 
 const { User, Room, Complaint, ComplaintRoom } = models;
 
+if (!User || !Room || !Complaint || !ComplaintRoom) {
+  throw new Error('Model initialization failed. Expected models: User, Room, Complaint, ComplaintRoom.');
+}
+
 // ROOM - USER
 Room.hasMany(User, {
   foreignKey: "room_nr",
@@ -57,13 +61,21 @@ Complaint.belongsTo(User, {
 
 // COMPLAINT - ROOMS 
 Room.belongsToMany(Complaint, {
-  through: ComplaintRoom,
+  through: {
+    model: ComplaintRoom,
+    unique: false,
+  },
   foreignKey: "room_nr",
+  otherKey: "complaint_id",
 });
 
 Complaint.belongsToMany(Room, {
-  through: ComplaintRoom,
+  through: {
+    model: ComplaintRoom,
+    unique: false,
+  },
   foreignKey: "complaint_id",
+  otherKey: "room_nr",
 });
 
 

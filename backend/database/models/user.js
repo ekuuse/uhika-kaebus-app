@@ -40,6 +40,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "user",
       },
+      status: {
+        type: DataTypes.ENUM("pending", "denied", "accepted"),
+        allowNull: false,
+        defaultValue: "pending",
+      },
       room_nr: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -50,7 +55,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "User",
+      tableName: "user",
       freezeTableName: true,
       timestamps: false,
     },

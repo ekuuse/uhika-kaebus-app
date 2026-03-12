@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
             },
             room_letter: {
                 type: DataTypes.ENUM("A", "B", "C"),
+                primaryKey: true,
                 allowNull: false,
             },
             floor: {
@@ -21,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
             },
         },
         {
-            tableName: "Room",
+            tableName: "room",
             freezeTableName: true,
             timestamps: false,
         }
