@@ -21,6 +21,12 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: DataTypes.NOW,
         allowNull: false,
       },
+      complaint_status: {
+        type: DataTypes.ENUM("saadetud", "tegutseme", "lahendatud"),
+        allowNull: false,
+        defaultValue: "saadetud",
+
+      },
       user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,

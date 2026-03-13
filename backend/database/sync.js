@@ -50,7 +50,18 @@ Complaint.belongsToMany(Room, {
 });
 
 
-const models = { User, Event, Deadline, Room, Complaint, ComplaintRoom };
+// USER - EVENT
+User.hasMany(Event, {
+  foreignKey: "user_id",
+});
+
+// USER - DEADLINE
+User.hasMany(Deadline, {
+  foreignKey: "user_id",
+});
+
+
+const models = { User, Event, Deadline, Room, Complaint, ComplaintRoom, Event, Deadline };
 
 async function syncDatabase(force = false) {
   try {

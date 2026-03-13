@@ -9,6 +9,7 @@ const UNKNOWN_ROOM_LETTER_VALUES = [
   "UNKNOWN",
   "A B C",
 ];
+const VALID_COMPLAINT_STATUSES = ["saadetud", "tegutseme", "lahendatud"];
 
 class ComplaintController extends BaseController {
   constructor() {
@@ -129,6 +130,7 @@ class ComplaintController extends BaseController {
         type,
         reasoning,
         user_id,
+        complaint_status: "saadetud",
       });
 
       const complaintRoomRows = roomsToAttach.map((foundRoom) => ({
@@ -158,14 +160,22 @@ class ComplaintController extends BaseController {
   async updateComplaint(req, res) {
     this.handleRequest(req, res, async () => {
       const { id } = req.params;
-      const { type, reasoning } = req.body;
+      const { type, reasoning, complaint_status } = req.body;
+      const normalizedComplaintStatus =
+        typeof complaint_status === "string"
+          ? complaint_status.trim().toLowerCase()
+          : complaint_status;
 
-      if (!type && !reasoning) {
+      if (
+        type === undefined &&
+        reasoning === undefined &&
+        complaint_status === undefined
+      ) {
         return res
           .status(400)
           .json({
             success: false,
-            error: "Provide at least type or reasoning to update.",
+            error: "Provide at least type, reasoning or complaint_status to update.",
           });
       }
 
@@ -186,8 +196,31 @@ class ComplaintController extends BaseController {
           .json({ success: false, error: "Invalid reasoning." });
       }
 
-      if (type) complaint.type = type;
-      if (reasoning) complaint.reasoning = reasoning;
+      if (complaint_status !== undefined) {
+        if (req.user.role !== "admin") {
+          return res.status(403).json({
+            success: false,
+            error: "Only admins can update complaint_status.",
+          });
+        }
+
+        if (
+          typeof complaint_status !== "string" ||
+          !VALID_COMPLAINT_STATUSES.includes(normalizedComplaintStatus)
+        ) {
+          return res.status(400).json({
+            success: false,
+            error:
+              "Invalid complaint_status. Allowed values: saadetud, tegutseme, lahendatud.",
+          });
+        }
+      }
+
+      if (type !== undefined) complaint.type = type;
+      if (reasoning !== undefined) complaint.reasoning = reasoning;
+      if (complaint_status !== undefined) {
+        complaint.complaint_status = normalizedComplaintStatus;
+      }
       await complaint.save();
 
       return res.status(200).json({

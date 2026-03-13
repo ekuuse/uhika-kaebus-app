@@ -34,10 +34,10 @@ fs.readdirSync(__dirname + '/models').forEach(file => {
 
 console.log(Object.keys(models));
 
-const { User, Room, Complaint, ComplaintRoom } = models;
+const { User, Room, Complaint, ComplaintRoom, Event, Deadline  } = models;
 
-if (!User || !Room || !Complaint || !ComplaintRoom) {
-  throw new Error('Model initialization failed. Expected models: User, Room, Complaint, ComplaintRoom.');
+if (!User || !Room || !Complaint || !ComplaintRoom || !Event || !Deadline) {
+  throw new Error('Model initialization failed. Expected models: User, Room, Complaint, ComplaintRoom, Event, Deadline.');
 }
 
 // ROOM - USER
@@ -59,7 +59,7 @@ Complaint.belongsTo(User, {
   foreignKey: "user_id",
 });
 
-// COMPLAINT - ROOMS 
+// COMPLAINT - ROOM 
 Room.belongsToMany(Complaint, {
   through: {
     model: ComplaintRoom,
@@ -76,6 +76,17 @@ Complaint.belongsToMany(Room, {
   },
   foreignKey: "complaint_id",
   otherKey: "room_nr",
+});
+
+
+// USER - EVENT
+User.hasMany(Event, {
+  foreignKey: "user_id",
+});
+
+// USER - DEADLINE
+User.hasMany(Deadline, {
+  foreignKey: "user_id",
 });
 
 

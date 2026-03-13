@@ -12,13 +12,14 @@ class userController extends BaseController {
     super();
     this.Register = this.Register.bind(this);
     this.Login = this.Login.bind(this);
+    this.UpdateRole = this.UpdateRole.bind(this);
   }
 
   generateToken(user) {
     const secret = Bun.env.JWT_SECRET;
     if (!secret) throw new Error("JWT_SECRET is not defined");
     return jwt.sign(
-      { id: user.id, username: user.username, email: user.email },
+      { id: user.id, username: user.username, email: user.email, role: user.role },
       secret,
       { expiresIn: "24h" }
     );
@@ -154,6 +155,50 @@ class userController extends BaseController {
           error: dbErr.message,
         });
       }
+    });
+  }
+
+  async UpdateRole(req, res) {
+    this.handleRequest(req, res, async () => {
+      const userId = Number(req.params.id);
+      const { role } = req.body;
+      const normalizedRole =
+        typeof role === "string" ? role.trim().toLowerCase() : role;
+
+      if (!Number.isInteger(userId) || userId <= 0) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Invalid user id." });
+      }
+
+      if (typeof role !== "string" || !["user", "admin"].includes(normalizedRole)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid role. Allowed values: user, admin.",
+        });
+      }
+
+      const user = await User.findByPk(userId);
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, error: "User not found." });
+      }
+
+      user.role = normalizedRole;
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "User role updated.",
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
+      });
     });
   }
 }
