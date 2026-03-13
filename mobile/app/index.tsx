@@ -5,12 +5,18 @@ import Navbar from "@/components/Navbar";
 import { router } from "expo-router";
 import { Pressable, Text, View, Image, ScrollView } from "react-native";
 
+const floors = [
+  { id: "5", color: "#50C800", hasInfo: false },
+  { id: "4", color: "#1F42DC", hasInfo: false },
+  { id: "3", color: "#D20101", hasInfo: true },
+  { id: "2", color: "#FFD723", hasInfo: true },
+];
+
 export default function Index() {
   return (
-    <View>
-      <Navbar></Navbar>
-
-      <ScrollView>
+    <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+      <Navbar />
+      <ScrollView contentContainerStyle={{ paddingBottom: 104 }}>
         <View style={{ paddingHorizontal: 24 }}>
           <Text style={{ fontFamily: "Poppins_700", fontSize: 24, paddingTop: 16 }}>Tere õhtust, (nimi)</Text>
           <View style={{ flexDirection: "row", gap: 8, paddingTop: 8 }}>
@@ -21,33 +27,34 @@ export default function Index() {
           <Text style={{ fontFamily: "Poppins_700", fontSize: 24, paddingTop: 48 }}>Valige korrus</Text>
 
           <View style={{ gap: 16, paddingTop: 16 }}>
-            <Pressable
-            onPress={() =>
-                                router.push({
-                                    pathname: "/report/[id]" as any,
-                                    params: { id: 5 },
-                                })
-                            } 
-            style={{ height: 48, backgroundColor: "#EEEEEE", borderRadius: 6, alignItems: "center", gap: 12, flexDirection: "row" }}>
-              <View style={{ width: 18, borderRadius: 6, backgroundColor: "#50C800", height: "100%" }} />
-              <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>5.korrus</Text>
-            </Pressable>
-            <Pressable style={{ height: 48, backgroundColor: "#EEEEEE", borderRadius: 6, alignItems: "center", gap: 12, flexDirection: "row" }}>
-              <View style={{ width: 18, borderRadius: 6, backgroundColor: "#1F42DC", height: "100%" }} />
-              <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>4.korrus</Text></Pressable>
-            <Pressable style={{ height: 48, backgroundColor: "#EEEEEE", borderRadius: 6, alignItems: "center", gap: 12, flexDirection: "row" }}>
-              <View style={{ width: 18, borderRadius: 6, backgroundColor: "#D20101", height: "100%" }} />
-              <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>3.korrus</Text>
-              <Pressable style={{ position: "absolute", right: 12, bottom: 14 }}>
-                <Image source={require('@/assets/icons/info.png')}></Image>
+            {floors.map((floor) => (
+              <Pressable
+                key={floor.id}
+                onPress={() =>
+                  router.push({
+                    pathname: "/report/[korrus]",
+                    params: { korrus: floor.id },
+                  })
+                }
+                style={{
+                  height: 48,
+                  backgroundColor: "#EEEEEE",
+                  borderRadius: 6,
+                  alignItems: "center",
+                  gap: 12,
+                  flexDirection: "row",
+                  position: "relative",
+                }}
+              >
+                <View style={{ width: 18, borderRadius: 6, backgroundColor: floor.color, height: "100%" }} />
+                <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>{floor.id}.korrus</Text>
+                {floor.hasInfo ? (
+                  <View style={{ position: "absolute", right: 12, bottom: 14 }}>
+                    <Image source={require("@/assets/icons/info.png")} />
+                  </View>
+                ) : null}
               </Pressable>
-            </Pressable>
-            <Pressable style={{ height: 48, backgroundColor: "#EEEEEE", borderRadius: 6, alignItems: "center", gap: 12, flexDirection: "row" }}>
-              <View style={{ width: 18, borderRadius: 6, backgroundColor: "#FFD723", height: "100%" }} />
-              <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>2.korrus</Text></Pressable>
-            <Pressable style={{ position: "absolute", right: 12, bottom: 14 }}>
-              <Image source={require('@/assets/icons/info.png')}></Image>
-            </Pressable>
+            ))}
           </View>
 
           <Text style={{ fontFamily: "Poppins_700", fontSize: 24, paddingTop: 48 }}>Üritused</Text>
@@ -58,16 +65,9 @@ export default function Index() {
 
           <EventsCalender></EventsCalender>
         </View>
-
-
-
-        <View style={{paddingTop:36}}></View>
-        <Footer></Footer>
-
-        <View style={{ paddingBottom: 104 }}></View>
-
+        <View style={{ paddingTop: 36 }}></View>
+        <Footer />
       </ScrollView>
-
     </View>
   );
 }

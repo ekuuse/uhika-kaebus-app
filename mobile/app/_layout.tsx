@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
 
   useEffect(() => {
@@ -24,7 +26,7 @@ export default function RootLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="report/[korrus]" options={{ headerShown: false }} />
     </Stack>
   );
