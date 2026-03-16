@@ -2,7 +2,9 @@ import Events from "@/components/Events";
 import EventsCalender from "@/components/EventsCalender";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { getAuthToken } from "@/lib/session";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View, Image, ScrollView } from "react-native";
 
 const floors = [
@@ -13,6 +15,31 @@ const floors = [
 ];
 
 export default function Index() {
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await getAuthToken();
+
+      if (!token) {
+        setIsAuthorized(false);
+        setIsAuthChecked(true);
+        router.replace("/(auth)/signin");
+        return;
+      }
+
+      setIsAuthorized(true);
+      setIsAuthChecked(true);
+    };
+
+    checkAuth();
+  }, []);
+
+  if (!isAuthChecked || !isAuthorized) {
+    return <View style={{ flex: 1, backgroundColor: "#ffffff" }} />;
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
       <Navbar />
