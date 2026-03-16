@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const checkAuthenticated = (req, res, next) => {
+const authenticateRequest = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   
@@ -19,11 +19,24 @@ const checkAuthenticated = (req, res, next) => {
   });
 };
 
+const checkAuthenticated = (req, res, next) => {
+  authenticateRequest(req, res, next);
+};
+
 const checkAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== 'admin') {
+  if (!req.user) {
+    return authenticateRequest(req, res, () => checkAdmin(req, res, next));
+  }
+
+  const role = req.user?.role;
+  console.log('checkAdmin - req.user:', req.user);
+  console.log('checkAdmin - req.user.role:', role);
+
+  if (!role || String(role).toLowerCase() !== 'admin') {
     return res.status(403).json({
       success: false,
       message: 'Admin access required.',
+      roleReceived: role ?? null
     });
   }
 

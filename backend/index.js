@@ -2,6 +2,7 @@ const express = require("express");
 const userRouter = require("./routes/userRouter");
 const complaintRouter = require("./routes/complaintRouter");
 const eventRouter = require("./routes/eventRouter");
+const deadlineRouter = require("./routes/deadlineRouter");
 const corsHandler = require('./middleware/cors');
 const rateLimit = require("express-rate-limit")
 const app = express();
@@ -25,6 +26,7 @@ app.use("/api", limiter);
 app.use("/api", userRouter);
 app.use("/api", complaintRouter);
 app.use("/api", eventRouter)
+app.use("/api", deadlineRouter)
 
 app.listen(7007, () => {
   console.log("👍 | http://localhost:7007");

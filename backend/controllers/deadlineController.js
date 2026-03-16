@@ -1,151 +1,149 @@
 const { models } = require("../database");
-const { Event } = models;
+const { Deadline } = models;
 const BaseController = require("./BaseController");
 
-class eventController extends BaseController {
+class deadlineController extends BaseController {
   constructor() {
     super();
-    this.addEvent = this.addEvent.bind(this);
-    this.getEvent = this.getEvent.bind(this);
-    this.updateEvent = this.updateEvent.bind(this);
-    this.deleteEvent = this.deleteEvent.bind(this);
-    this.getAllEvents = this.getAllEvents.bind(this);
+    this.addDeadline = this.addDeadline.bind(this);
+    this.getDeadline = this.getDeadline.bind(this);
+    this.updateDeadline = this.updateDeadline.bind(this);
+    this.deleteDeadline = this.deleteDeadline.bind(this);
+    this.getAllDeadlines = this.getAllDeadlines.bind(this);
   }
 
-  async addEvent(req, res) {
+  async addDeadline(req, res) {
     try {
-      const { name, description, location, date, image } = req.body;
+      const { name, description, date, type } = req.body;
       const user_id = req.user.id;
 
-      const event = await Event.create({
+      const deadline = await Deadline.create({
         name,
         description,
-        location,
         date,
-        image,
-        user_id
+        type,
+        user_id,
       });
 
       return res.status(201).json({
         success: true,
-        data: event,
+        data: deadline,
       });
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Failed to create event",
+        message: "Failed to create deadline",
         error: error.message,
       });
     }
   }
 
-  async getEvent(req, res) {
+  async getDeadline(req, res) {
     try {
       const { id } = req.params;
 
-      const event = await Event.findByPk(id);
+      const deadline = await Deadline.findByPk(id);
 
-      if (!event) {
+      if (!deadline) {
         return res.status(404).json({
           success: false,
-          message: "Event not found",
+          message: "Deadline not found",
         });
       }
 
       return res.json({
         success: true,
-        data: event,
+        data: deadline,
       });
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Failed to get event",
+        message: "Failed to get deadline",
         error: error.message,
       });
     }
   }
 
-  async getAllEvents(req, res) {
+  async getAllDeadlines(req, res) {
     try {
-      const events = await Event.findAll({
+      const deadlines = await Deadline.findAll({
         order: [["date", "ASC"]],
       });
 
       return res.json({
         success: true,
-        data: events,
+        data: deadlines,
       });
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Failed to fetch events",
+        message: "Failed to fetch deadlines",
         error: error.message,
       });
     }
   }
 
-  async updateEvent(req, res) {
+  async updateDeadline(req, res) {
     try {
       const { id } = req.params;
-      const { name, description, location, date, image } = req.body;
+      const { name, description, date, type } = req.body;
 
-      const event = await Event.findByPk(id);
+      const deadline = await Deadline.findByPk(id);
 
-      if (!event) {
+      if (!deadline) {
         return res.status(404).json({
           success: false,
-          message: "Event not found",
+          message: "Deadline not found",
         });
       }
 
-      await event.update({
+      await deadline.update({
         name,
         description,
-        location,
         date,
-        image,
+        type,
       });
 
       return res.json({
         success: true,
-        data: event,
+        data: deadline,
       });
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Failed to update event",
+        message: "Failed to update deadline",
         error: error.message,
       });
     }
   }
 
-  async deleteEvent(req, res) {
+  async deleteDeadline(req, res) {
     try {
       const { id } = req.params;
 
-      const event = await Event.findByPk(id);
+      const deadline = await Deadline.findByPk(id);
 
-      if (!event) {
+      if (!deadline) {
         return res.status(404).json({
           success: false,
-          message: "Event not found",
+          message: "Deadline not found",
         });
       }
 
-      await event.destroy();
+      await deadline.destroy();
 
       return res.json({
         success: true,
-        message: "Event deleted successfully",
+        message: "Deadline deleted successfully",
       });
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Failed to delete event",
+        message: "Failed to delete deadline",
         error: error.message,
       });
     }
   }
 }
 
-module.exports = new eventController();
+module.exports = new deadlineController();
