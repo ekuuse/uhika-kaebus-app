@@ -18,6 +18,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="[tuba]/index" />
+        <Stack.Screen name="[tuba]/kinnitatud" />
       </Stack>
     </View>
   );
