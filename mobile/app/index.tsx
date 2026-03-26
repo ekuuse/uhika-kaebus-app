@@ -42,8 +42,8 @@ export default function Index() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
-      <Navbar />
-      <ScrollView contentContainerStyle={{ paddingBottom: 104 }}>
+      <Navbar showLogout={true} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 0 }}>
         <View style={{ paddingHorizontal: 24 }}>
           <Text style={{ fontFamily: "Poppins_700", fontSize: 24, paddingTop: 16 }}>Tere õhtust, (nimi)</Text>
           <View style={{ flexDirection: "row", gap: 8, paddingTop: 8 }}>

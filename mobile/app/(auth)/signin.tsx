@@ -12,7 +12,8 @@ import {
     KeyboardAvoidingView,
     ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
+import Navbar from "@/components/Navbar";
 
 const getApiBaseUrl = () => {
     if (process.env.EXPO_PUBLIC_API_URL) {
@@ -53,6 +54,9 @@ export default function SignInScreen() {
             setIsLoading(true);
             setErrorMessage("");
 
+            console.log("Attempting login with:", { accountname, password });
+            console.log("API Base URL:", getApiBaseUrl());
+
             const response = await fetch(`${getApiBaseUrl()}/api/user/login`, {
                 method: "POST",
                 headers: {
@@ -66,6 +70,8 @@ export default function SignInScreen() {
 
             const data = await response.json();
 
+            console.log("Login response:", data);
+
             if (!response.ok || !data?.success) {
                 await setAuthToken(null);
                 setErrorMessage(data?.error || data?.message || "Vale kasutajanimi või parool");
@@ -74,7 +80,8 @@ export default function SignInScreen() {
 
             await setAuthToken(data?.token || "session-active");
             router.replace("/");
-        } catch {
+        } catch (e) {
+            console.error("Login error:", e);
             await setAuthToken(null);
             setErrorMessage("Serveriga ei saanud ühendust");
         } finally {
@@ -84,22 +91,7 @@ export default function SignInScreen() {
 
     return (
         <View style={{ flex: 1, backgroundColor: "#000000" }}>
-            <SafeAreaView style={{ backgroundColor: "#000000" }}>
-                <View
-                    style={{
-                        height: 48,
-                        justifyContent: "center",
-                        paddingHorizontal: 12,
-                        backgroundColor: "#000000",
-                    }}
-                >
-                    <Image
-                        source={require("@/assets/branding/voco-white.png")}
-                        style={{ width: 129, height: 55 }}
-                        resizeMode="contain"
-                    />
-                </View>
-            </SafeAreaView>
+            <Navbar showLogout={false}></Navbar>
 
             <KeyboardAvoidingView
                 style={{ flex: 1, backgroundColor: "#D9D9D9" }}

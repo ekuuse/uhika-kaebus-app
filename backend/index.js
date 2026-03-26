@@ -28,7 +28,7 @@ app.use("/api", complaintRouter);
 app.use("/api", eventRouter)
 app.use("/api", deadlineRouter)
 
-app.listen(7007, () => {
+app.listen(7007, "0.0.0.0", () => {
   console.log("👍 | http://localhost:7007");
 });
 
