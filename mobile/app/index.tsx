@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { getAuthToken } from "@/lib/session";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, Text, View, Image, ScrollView } from "react-native";
+import { Pressable, Text, View, Image, ScrollView, Platform } from "react-native";
 
 const floors = [
   { id: "5", color: "#50C800", hasInfo: false },
@@ -14,9 +14,39 @@ const floors = [
   { id: "2", color: "#FFD723", hasInfo: true },
 ];
 
+const getApiBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:7007";
+  }
+
+  return "http://localhost:7007";
+};
+
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) {
+    return "Tere hommikust";
+  } else if (hour < 18) {
+    return "Tere päevast";
+  } else {
+    return "Tere õhtust";
+  }
+};
+
+const formatUserName = (username: string | undefined) => {
+  if (typeof username !== 'string' || !username) return "";
+  const firstName = username.split('.')[0];
+  return firstName.charAt(0).toUpperCase() + firstName.slice(1);
+};
+
 export default function Index() {
   const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [userName, setUserName] = useState("a");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -28,6 +58,26 @@ export default function Index() {
         router.replace("/(auth)/signin");
         return;
       }
+
+      console.log(`${getApiBaseUrl()}/api/user/session`)
+      fetch(`${getApiBaseUrl()}/api/user/session`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((res) => res.json()).then((data) => {
+        console.log(data)
+        if (data.success) {
+          setUserName(formatUserName(data.user.username));
+          console.log(userName)
+        } else {
+          setIsAuthorized(false);
+          router.replace("/(auth)/signin");
+        }
+      }).catch((error) => {
+        console.error("Failed to fetch user session:", error);
+        setIsAuthorized(false);
+        router.replace("/(auth)/signin");
+      })
 
       setIsAuthorized(true);
       setIsAuthChecked(true);
@@ -45,7 +95,7 @@ export default function Index() {
       <Navbar showLogout={true} />
       <ScrollView contentContainerStyle={{ paddingBottom: 0 }}>
         <View style={{ paddingHorizontal: 24 }}>
-          <Text style={{ fontFamily: "Poppins_700", fontSize: 24, paddingTop: 16 }}>Tere õhtust, (nimi)</Text>
+          <Text style={{ fontFamily: "Poppins_700", fontSize: 24, paddingTop: 16 }}>{getGreeting()}, {userName}</Text>
           <View style={{ flexDirection: "row", gap: 8, paddingTop: 8 }}>
             <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>Teie tuba:</Text><Text style={{ fontFamily: "Poppins_700", fontSize: 19 }}>312B</Text>
           </View>

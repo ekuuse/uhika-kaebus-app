@@ -11,6 +11,7 @@ class userRouter extends BaseRouter {
   registerRoutes() {
     this.registerRoute("post", "/user/register", userController.Register);
     this.registerRoute("post", "/user/login", userController.Login);
+    this.registerRoute("get", "/user/session", checkAuthenticated, userController.getSession);
     this.registerRoute(
       "patch",
       "/admin/users/:id/role",

@@ -13,6 +13,7 @@ class userController extends BaseController {
     this.Register = this.Register.bind(this);
     this.Login = this.Login.bind(this);
     this.UpdateRole = this.UpdateRole.bind(this);
+    this.getSession = this.getSession.bind(this);
   }
 
   generateToken(user) {
@@ -200,6 +201,16 @@ class userController extends BaseController {
         },
       });
     });
+  }
+
+  async getSession(req, res) {
+    this.handleRequest(req, res, async () => {
+      console.log(req.user)
+      return res.status(200).json({
+        success: true,
+        user: req.user,
+      });
+    })
   }
 }
 
