@@ -91,7 +91,7 @@ const Events = () => {
                         <View style={{ width: "60%", paddingRight: 12 }}>
                             <Text style={{ fontFamily: "Poppins_700", fontSize: 24 }}>{event.name}</Text>
                             <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>{event.location || "Asukoht puudub"}</Text>
-                            <Text style={{ fontFamily: "Poppins_400", fontSize: 19, position: "absolute", bottom: 0 }}>
+                            <Text style={{ fontFamily: "Poppins_400", fontSize: 19}}>
                                 {eventDate.toLocaleDateString("et-EE", { weekday: "long", day: "numeric", month: "long" })}, {eventDate.toLocaleTimeString("et-EE", { hour: "2-digit", minute: "2-digit" })}
                             </Text>
                         </View>

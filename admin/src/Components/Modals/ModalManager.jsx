@@ -2,6 +2,9 @@ import React, { Suspense, lazy } from "react";
 
 const modals = {
   createevent: lazy(() => import("./CreateEvent")),
+  updateevent: lazy(() => import("./UpdateEvent")),
+  deleteevent: lazy(() => import("./DeleteEvent")),
+  updatecomplaint: lazy(() => import("./UpdateComplaint")),
   createsundmus: lazy(() => import("./CreateSundmus")),
 };
 

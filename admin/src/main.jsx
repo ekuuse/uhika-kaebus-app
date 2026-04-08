@@ -8,6 +8,7 @@ import './index.css';
 import Home from './container/Home';
 import Login from './container/Login';
 import { getStoredToken, isAdminToken } from './auth';
+import Users from './container/Users';
 
 const ProtectedRoute = ({ children }) => {
   const token = getStoredToken();
@@ -19,6 +20,7 @@ root.render(
   <BrowserRouter>
     <Routes>
       <Route path='/login' element={<Login />} />
+      <Route path='/users' element={<ProtectedRoute><Users /></ProtectedRoute>} />
       <Route path='/' element={<ProtectedRoute><Home /></ProtectedRoute>} />
       <Route path='*' element={<Navigate to='/' replace />} />
     </Routes>
