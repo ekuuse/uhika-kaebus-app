@@ -2,21 +2,70 @@ const { models } = require("../database");
 const { Room } = models;
 const BaseController = require("./BaseController");
 
-class deadlineController extends BaseController {
+const VALID_ROOM_LETTERS = ["A", "B", "C"];
+
+class roomController extends BaseController {
   constructor() {
     super();
     this.addRoom = this.addRoom.bind(this);
-    
+    this.getRoom = this.getRoom.bind(this);
+    this.getAllRooms = this.getAllRooms.bind(this);
+    this.updateRoom = this.updateRoom.bind(this);
+    this.deleteRoom = this.deleteRoom.bind(this);
   }
 
   async addRoom(req, res) {
     try {
-      const { room_nr, room_letter, floor } = req.body;
+      const { room_nr, room_letter, floor, grade } = req.body;
+      const parsedRoomNr = Number(room_nr);
+      const parsedFloor = Number(floor);
+      const parsedGrade = grade === undefined || grade === null || grade === ""
+        ? null
+        : Number(grade);
+      const normalizedRoomLetter = typeof room_letter === "string"
+        ? room_letter.trim().toUpperCase()
+        : room_letter;
+
+      if (!Number.isInteger(parsedRoomNr) || !Number.isInteger(parsedFloor)) {
+        return res.status(400).json({
+          success: false,
+          message: "room_nr and floor must be integers",
+        });
+      }
+
+      if (!VALID_ROOM_LETTERS.includes(normalizedRoomLetter)) {
+        return res.status(400).json({
+          success: false,
+          message: "room_letter must be A, B, or C",
+        });
+      }
+
+      if (parsedGrade !== null && !Number.isInteger(parsedGrade)) {
+        return res.status(400).json({
+          success: false,
+          message: "grade must be an integer when provided",
+        });
+      }
+
+      const existingRoom = await Room.findOne({
+        where: {
+          room_nr: parsedRoomNr,
+          room_letter: normalizedRoomLetter,
+        },
+      });
+
+      if (existingRoom) {
+        return res.status(409).json({
+          success: false,
+          message: "Room already exists",
+        });
+      }
 
       const room = await Room.create({
-        room_nr,
-        room_letter,
-        floor
+        room_nr: parsedRoomNr,
+        room_letter: normalizedRoomLetter,
+        floor: parsedFloor,
+        grade: parsedGrade,
       });
 
       return res.status(201).json({
@@ -35,20 +84,31 @@ class deadlineController extends BaseController {
   async getRoom(req, res) {
     try {
       const { room_nr, room_letter } = req.params;
+      const parsedRoomNr = Number(room_nr);
+      const normalizedRoomLetter = typeof room_letter === "string"
+        ? room_letter.trim().toUpperCase()
+        : room_letter;
+
+      if (!Number.isInteger(parsedRoomNr) || !VALID_ROOM_LETTERS.includes(normalizedRoomLetter)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid room identifier",
+        });
+      }
 
       const room = await Room.findOne({
-      where: {
-        room_nr: room_nr,
-        room_letter: room_letter
-      }
-    });
-
-    if (!room) {
-      return res.status(404).json({
-        success: false,
-        message: "Room not found",
+        where: {
+          room_nr: parsedRoomNr,
+          room_letter: normalizedRoomLetter,
+        },
       });
-    }
+
+      if (!room) {
+        return res.status(404).json({
+          success: false,
+          message: "Room not found",
+        });
+      }
 
       return res.json({
         success: true,
@@ -64,96 +124,147 @@ class deadlineController extends BaseController {
   }
 
   async getAllRooms(req, res) {
-  try {
-    const rooms = await Room.findAll({
-      order: [
-        ["room_nr", "ASC"],
-        ["room_letter", "ASC"]
-      ],
-    });
-
-    const grouped = {};
-    rooms.forEach(room => {
-      if (!grouped[room.room_nr]) {
-        grouped[room.room_nr] = { A: null, B: null, C: null };
-      }
-      grouped[room.room_nr][room.room_letter] = room;
-    });
-
-    return res.json({
-      success: true,
-      data: grouped,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to get rooms",
-      error: error.message,
-    });
-  }
-}
-
-  async updateDeadline(req, res) {
     try {
-      const { id } = req.params;
-      const { name, description, date, type } = req.body;
+      const rooms = await Room.findAll({
+        order: [
+          ["room_nr", "ASC"],
+          ["room_letter", "ASC"],
+        ],
+      });
 
-      const deadline = await Deadline.findByPk(id);
+      const grouped = {};
+      rooms.forEach((room) => {
+        if (!grouped[room.room_nr]) {
+          grouped[room.room_nr] = { A: null, B: null, C: null };
+        }
 
-      if (!deadline) {
-        return res.status(404).json({
-          success: false,
-          message: "Deadline not found",
-        });
-      }
-
-      await deadline.update({
-        name,
-        description,
-        date,
-        type,
+        grouped[room.room_nr][room.room_letter] = room;
       });
 
       return res.json({
         success: true,
-        data: deadline,
+        data: grouped,
       });
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Failed to update deadline",
+        message: "Failed to get rooms",
         error: error.message,
       });
     }
   }
 
-  async deleteDeadline(req, res) {
+  async updateRoom(req, res) {
     try {
-      const { id } = req.params;
+      const { room_nr, room_letter } = req.params;
+      const { floor, grade } = req.body;
+      const parsedRoomNr = Number(room_nr);
+      const normalizedRoomLetter = typeof room_letter === "string"
+        ? room_letter.trim().toUpperCase()
+        : room_letter;
+      const parsedFloor = floor === undefined || floor === null || floor === ""
+        ? undefined
+        : Number(floor);
+      const parsedGrade = grade === undefined || grade === null || grade === ""
+        ? undefined
+        : Number(grade);
 
-      const deadline = await Deadline.findByPk(id);
-
-      if (!deadline) {
-        return res.status(404).json({
+      if (!Number.isInteger(parsedRoomNr) || !VALID_ROOM_LETTERS.includes(normalizedRoomLetter)) {
+        return res.status(400).json({
           success: false,
-          message: "Deadline not found",
+          message: "Invalid room identifier",
         });
       }
 
-      await deadline.destroy();
+      if (parsedFloor !== undefined && !Number.isInteger(parsedFloor)) {
+        return res.status(400).json({
+          success: false,
+          message: "floor must be an integer when provided",
+        });
+      }
+
+      if (parsedGrade !== undefined && !Number.isInteger(parsedGrade)) {
+        return res.status(400).json({
+          success: false,
+          message: "grade must be an integer when provided",
+        });
+      }
+
+      const room = await Room.findOne({
+        where: {
+          room_nr: parsedRoomNr,
+          room_letter: normalizedRoomLetter,
+        },
+      });
+
+      if (!room) {
+        return res.status(404).json({
+          success: false,
+          message: "Room not found",
+        });
+      }
+
+      await room.update({
+        ...(parsedFloor !== undefined ? { floor: parsedFloor } : {}),
+        ...(parsedGrade !== undefined ? { grade: parsedGrade } : {}),
+      });
 
       return res.json({
         success: true,
-        message: "Deadline deleted successfully",
+        data: room,
       });
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Failed to delete deadline",
+        message: "Failed to update room",
+        error: error.message,
+      });
+    }
+  }
+
+  async deleteRoom(req, res) {
+    try {
+      const { room_nr, room_letter } = req.params;
+      const parsedRoomNr = Number(room_nr);
+      const normalizedRoomLetter = typeof room_letter === "string"
+        ? room_letter.trim().toUpperCase()
+        : room_letter;
+
+      if (!Number.isInteger(parsedRoomNr) || !VALID_ROOM_LETTERS.includes(normalizedRoomLetter)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid room identifier",
+        });
+      }
+
+      const room = await Room.findOne({
+        where: {
+          room_nr: parsedRoomNr,
+          room_letter: normalizedRoomLetter,
+        },
+      });
+
+      if (!room) {
+        return res.status(404).json({
+          success: false,
+          message: "Room not found",
+        });
+      }
+
+      await room.destroy();
+
+      return res.json({
+        success: true,
+        message: "Room deleted successfully",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to delete room",
         error: error.message,
       });
     }
   }
 }
 
-module.exports = new deadlineController();
+module.exports = new roomController();

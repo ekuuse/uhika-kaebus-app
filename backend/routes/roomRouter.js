@@ -9,8 +9,11 @@ class roomRouter extends BaseRouter {
   }
 
   registerRoutes() {
-    this.registerRoute("post", "/rooms/register", userController.Register);
-    this.registerRoute("get", "/rooms/:room_nr/:room_letter", userController.getRoom);
+    this.registerRoute("post", "/room", checkAuthenticated, checkAdmin, roomController.addRoom);
+    this.registerRoute("get", "/rooms", checkAuthenticated, roomController.getAllRooms);
+    this.registerRoute("get", "/rooms/:room_nr/:room_letter", checkAuthenticated, roomController.getRoom);
+    this.registerRoute("put", "/rooms/:room_nr/:room_letter", checkAuthenticated, checkAdmin, roomController.updateRoom);
+    this.registerRoute("delete", "/rooms/:room_nr/:room_letter", checkAuthenticated, checkAdmin, roomController.deleteRoom);
 
   }
 }
