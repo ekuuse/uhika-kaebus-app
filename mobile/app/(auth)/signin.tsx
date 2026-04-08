@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { getAuthToken, setAuthToken } from "@/lib/session";
+import { getApiBaseUrl } from "@/lib/api";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import {
@@ -18,18 +19,6 @@ import {
 import Navbar from "@/components/Navbar";
 
 WebBrowser.maybeCompleteAuthSession();
-
-const getApiBaseUrl = () => {
-    if (process.env.EXPO_PUBLIC_API_URL) {
-        return process.env.EXPO_PUBLIC_API_URL;
-    }
-
-    if (Platform.OS === "android") {
-        return "http://10.0.2.2:7007";
-    }
-
-    return "http://localhost:7007";
-};
 
 export default function SignInScreen() {
     const [accountname, setAccountname] = useState("");
