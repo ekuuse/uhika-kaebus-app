@@ -24,7 +24,7 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <Stack initialRouteName="(auth)">
+    <Stack initialRouteName="(auth)" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="report/[korrus]" options={{ headerShown: false }} />
