@@ -2,6 +2,9 @@ const { Sequelize } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
 
+require('dotenv').config({ path: './.env' });
+Object.assign(Bun.env, process.env);
+
 console.log('Database connection parameters:');
 console.log('Host:', Bun.env.DB_HOST);
 console.log('Database:', Bun.env.DB_NAME);

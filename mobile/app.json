@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "uhika-kaebus",
+    "slug": "uhika-kaebus",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.voco.uhika",
       "supportsTablet": true
     },
     "android": {
@@ -19,6 +20,9 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
+      "package": "com.voco.uhika",
+      "versionCode": 1,
+      "bundleIdentifier": "com.voco.uhika",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -43,6 +47,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "437f47f2-a78b-411c-9131-fb6da036c11a"
+      }
     }
   }
 }
