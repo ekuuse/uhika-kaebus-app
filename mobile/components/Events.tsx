@@ -85,12 +85,7 @@ const Events = () => {
                 return (
                     <Pressable
                         key={event.event_id}
-                        onPress={() =>
-                            router.push({
-                                pathname: "/uritused/[id]/[id]",
-                                params: { id: String(event.event_id) },
-                            })
-                        }
+                        onPress={() => router.push(`/uritused/${event.event_id}/${event.event_id}`)}
                         style={{ backgroundColor: "#EEEEEE", paddingVertical: 24, paddingHorizontal: 16, borderRadius: 6, marginTop: 16, flexDirection: "row" }}
                     >
                         <View style={{ width: "60%", paddingRight: 12 }}>
