@@ -2,10 +2,11 @@ import Events from "@/components/Events";
 import EventsCalender from "@/components/EventsCalender";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { getApiBaseUrl } from "@/lib/api";
 import { getAuthToken } from "@/lib/session";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, Text, View, Image, ScrollView, Platform } from "react-native";
+import { Pressable, Text, View, Image, ScrollView } from "react-native";
 
 const floors = [
   { id: "5", color: "#50C800", hasInfo: false },
@@ -13,18 +14,6 @@ const floors = [
   { id: "3", color: "#D20101", hasInfo: true },
   { id: "2", color: "#FFD723", hasInfo: true },
 ];
-
-const getApiBaseUrl = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-
-  if (Platform.OS === "android") {
-    return "http://10.0.2.2:7007";
-  }
-
-  return "http://localhost:7007";
-};
 
 const getGreeting = () => {
   const hour = new Date().getHours();

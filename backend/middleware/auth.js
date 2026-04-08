@@ -4,6 +4,15 @@ const path = require('path');
 
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
+const isAuthDebugEnabled =
+  String(process.env.DEBUG_AUTH || '').toLowerCase() === 'true';
+
+const logAuthDebug = (...args) => {
+  if (isAuthDebugEnabled) {
+    console.log(...args);
+  }
+};
+
 const authenticateRequest = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -16,7 +25,7 @@ const authenticateRequest = (req, res, next) => {
     if (err) {
       return res.status(401).json({ message: 'You are not logged in', success: false });
     }
-    console.log("Authenticated user:", user);
+    logAuthDebug('Authenticated user:', user);
     req.user = user;
 
     next();
@@ -33,8 +42,8 @@ const checkAdmin = (req, res, next) => {
   }
 
   const role = req.user?.role;
-  console.log('checkAdmin - req.user:', req.user);
-  console.log('checkAdmin - req.user.role:', role);
+  logAuthDebug('checkAdmin - req.user:', req.user);
+  logAuthDebug('checkAdmin - req.user.role:', role);
 
   if (!role || String(role).toLowerCase() !== 'admin') {
     return res.status(403).json({

@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
 import { LabeledTextArea } from "@/components/LabeledTextArea";
+import { fetchRoomsByFloor, ROOM_LETTERS, RoomGroupMap } from "@/lib/rooms";
+import { getApiBaseUrl } from "@/lib/api";
+import { getAuthToken } from "@/lib/session";
 import { router, useLocalSearchParams } from "expo-router";
 import {
     View,
@@ -12,14 +15,7 @@ import {
     ScrollView,
 } from "react-native"
 
-const complaintOptions = [
-    "Mura",
-    "Varakahju",
-    "Koristus",
-    "Muu",
-];
-
-const letters = ["A", "B", "C"];
+const complaintOptions = ["Mura", "Varakahju", "Koristus", "Muu"];
 
 
 const Index = () => {
@@ -27,14 +23,119 @@ const Index = () => {
     const [selectedComplaints, setSelectedComplaints] = useState<string[]>([]);
     const [põhjendus, setPõhjendus] = useState("");
     const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
+    const [roomsByNumber, setRoomsByNumber] = useState<RoomGroupMap>({});
+    const [isLoadingRooms, setIsLoadingRooms] = useState(true);
+    const [roomError, setRoomError] = useState("");
+    const [submitError, setSubmitError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const roomsData: Record<string, Record<string, any | null>> = {
-        "101": { A: { grade: 1 }, B: { grade: 2 }, C: null },
-        "102": { A: null, B: { grade: 3 }, C: { grade: 4 } },
+    useEffect(() => {
+        const loadRooms = async () => {
+            const floor = Array.isArray(korrus) ? korrus[0] : korrus;
+
+            if (!floor) {
+                setRoomError("Korruse info puudub.");
+                setIsLoadingRooms(false);
+                return;
+            }
+
+            const token = await getAuthToken();
+
+            if (!token) {
+                router.replace("/(auth)/signin");
+                return;
+            }
+
+            try {
+                setIsLoadingRooms(true);
+                setRoomError("");
+                const data = await fetchRoomsByFloor(floor, token);
+                setRoomsByNumber(data);
+            } catch (error) {
+                console.error("Failed to load room details:", error);
+                setRoomError("Toa info laadimine ebaõnnestus.");
+            } finally {
+                setIsLoadingRooms(false);
+            }
+        };
+
+        loadRooms();
+    }, [korrus]);
+
+    const roomLetters = useMemo(() => {
+        const selectedRoom = Array.isArray(tuba) ? tuba[0] : tuba;
+        return selectedRoom ? roomsByNumber[selectedRoom] || { A: null, B: null, C: null } : { A: null, B: null, C: null };
+    }, [roomsByNumber, tuba]);
+
+    const selectedRoomNumber = Array.isArray(tuba) ? tuba[0] : tuba;
+
+    const submitComplaint = async () => {
+        const roomNr = Number(selectedRoomNumber);
+
+        if (!Number.isInteger(roomNr)) {
+            setSubmitError("Toa number on vigane.");
+            return;
+        }
+
+        if (selectedComplaints.length === 0) {
+            setSubmitError("Palun vali vähemalt üks kaebuse tüüp.");
+            return;
+        }
+
+        if (!põhjendus.trim()) {
+            setSubmitError("Palun lisa kaebuse kirjeldus.");
+            return;
+        }
+
+        const token = await getAuthToken();
+
+        if (!token) {
+            router.replace("/(auth)/signin");
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            setSubmitError("");
+
+            const response = await fetch(`${getApiBaseUrl()}/api/complaint`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    type: selectedComplaints.join(", "),
+                    reasoning: põhjendus.trim(),
+                    room: {
+                        room_nr: roomNr,
+                        room_letter: selectedLetter ?? "IDK",
+                    },
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data?.success) {
+                setSubmitError(data?.error || data?.message || "Kaebuse saatmine ebaõnnestus.");
+                return;
+            }
+
+            Keyboard.dismiss();
+            router.push({
+                pathname: "/report/[korrus]/[tuba]/kinnitatud",
+                params: {
+                    korrus,
+                    tuba: selectedLetter ? `${selectedRoomNumber}-${selectedLetter}` : selectedRoomNumber,
+                },
+            });
+        } catch (error) {
+            console.error("Failed to submit complaint:", error);
+            setSubmitError("Kaebuse saatmine ebaõnnestus.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
-
-    // Get letters for this room
-    const roomLetters = roomsData[tuba] || { A: null, B: null, C: null };
 
 
     return (
@@ -53,9 +154,14 @@ const Index = () => {
                     paddingVertical: 24,
                 }}
             >
-                <Text style={{ fontFamily: "Poppins_700", fontSize: 24, textAlign: "left", width: "100%" }}>Kaebus toale {tuba}</Text>
+                <Text style={{ fontFamily: "Poppins_700", fontSize: 24, textAlign: "left", width: "100%" }}>Kaebus toale {selectedRoomNumber}</Text>
+                {isLoadingRooms ? (
+                    <Text style={{ marginTop: 8, color: "#00000080", width: "100%" }}>Laadime toa infot...</Text>
+                ) : roomError ? (
+                    <Text style={{ marginTop: 8, color: "#C62828", width: "100%" }}>{roomError}</Text>
+                ) : null}
                 <View style={{ display: "flex", flexDirection: "row", gap: 16, paddingTop: 24 }}>
-                    {letters.map(letter => {
+                    {ROOM_LETTERS.map(letter => {
                         const roomExists = roomLetters?.[letter] !== null;
                         return (
                             <Pressable
@@ -63,7 +169,6 @@ const Index = () => {
                                 disabled={!roomExists}
                                 onPress={() => {
                                     if (roomExists) {
-                                        console.log("Clicked room letter:", letter);
                                         setSelectedLetter(letter);
                                     }
                                 }}
@@ -87,7 +192,12 @@ const Index = () => {
                         );
                     })}
                 </View>
-                <Pressable style={{ backgroundColor: "#EEEEEE", borderColor: "#00000012", marginTop: 12, borderWidth: 1, borderRadius: 6, height: 48, alignItems: "center", justifyContent: "center", width: "100%" }}><Text>Ei ole kindel</Text></Pressable>
+                <Pressable
+                    onPress={() => setSelectedLetter(null)}
+                    style={{ backgroundColor: "#EEEEEE", borderColor: "#00000012", marginTop: 12, borderWidth: 1, borderRadius: 6, height: 48, alignItems: "center", justifyContent: "center", width: "100%" }}
+                >
+                    <Text>Ei ole kindel</Text>
+                </Pressable>
                 <Text style={{ textAlign: "left", width: "100%", color: "#FF5959", marginTop: 8 }}>* palun valige tuba</Text>
 
                 <MultiSelectDropdown
@@ -106,17 +216,13 @@ const Index = () => {
                 />
 
                 <Pressable
-                    onPress={() => {
-                        Keyboard.dismiss();
-                        router.push({
-                            pathname: "/report/[korrus]/[tuba]/kinnitatud",
-                            params: { korrus, tuba },
-                        });
-                    }}
+                    onPress={submitComplaint}
+                    disabled={isSubmitting}
                     style={{ backgroundColor: "#EEEEEE", borderColor: "#00000012", borderWidth: 1, marginTop: 12, borderRadius: 6, width: "100%", alignItems: "center", justifyContent: "center", height: 48 }}
                 >
-                    <Text>Saada</Text>
+                    <Text>{isSubmitting ? "Saadan..." : "Saada"}</Text>
                 </Pressable>
+                {submitError ? <Text style={{ textAlign: "left", width: "100%", color: "#C62828", marginTop: 8 }}>{submitError}</Text> : null}
                 <Pressable
                     onPress={() => { Keyboard.dismiss(); router.replace("/"); }}
                     style={{ backgroundColor: "#EEEEEE", borderColor: "#FF00004F", borderWidth: 1, marginTop: 12, borderRadius: 6, width: "100%", alignItems: "center", justifyContent: "center", height: 48 }}

@@ -346,7 +346,6 @@ class userController extends BaseController {
 
   async getSession(req, res) {
     this.handleRequest(req, res, async () => {
-      console.log(req.user)
       return res.status(200).json({
         success: true,
         user: req.user,

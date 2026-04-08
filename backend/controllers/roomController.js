@@ -125,7 +125,20 @@ class roomController extends BaseController {
 
   async getAllRooms(req, res) {
     try {
+      const { floor } = req.query;
+      const parsedFloor = floor === undefined || floor === null || floor === ""
+        ? undefined
+        : Number(floor);
+
+      if (parsedFloor !== undefined && !Number.isInteger(parsedFloor)) {
+        return res.status(400).json({
+          success: false,
+          message: "floor must be an integer when provided",
+        });
+      }
+
       const rooms = await Room.findAll({
+        where: parsedFloor === undefined ? undefined : { floor: parsedFloor },
         order: [
           ["room_nr", "ASC"],
           ["room_letter", "ASC"],
