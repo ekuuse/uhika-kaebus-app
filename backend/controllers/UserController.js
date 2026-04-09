@@ -448,9 +448,38 @@ class userController extends BaseController {
 
   async getSession(req, res) {
     this.handleRequest(req, res, async () => {
+      const user = await User.findByPk(req.user.id, {
+        attributes: { exclude: ["password", "google_id"] },
+      });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found.",
+        });
+      }
+
+      const userData = user.get({ plain: true });
+      const assignedRoomNumber = userData.room_nr;
+      const resolvedRoom = Number.isInteger(assignedRoomNumber)
+        ? await Room.findOne({
+            where: { room_nr: assignedRoomNumber },
+            order: [["room_letter", "ASC"]],
+          })
+        : null;
+      const roomLabel = resolvedRoom
+        ? `${resolvedRoom.room_nr}${resolvedRoom.room_letter}`
+        : Number.isInteger(assignedRoomNumber)
+          ? String(assignedRoomNumber)
+          : null;
+
       return res.status(200).json({
         success: true,
-        user: req.user,
+        user: {
+          ...userData,
+          room: resolvedRoom,
+          room_label: roomLabel,
+        },
       });
     })
   }

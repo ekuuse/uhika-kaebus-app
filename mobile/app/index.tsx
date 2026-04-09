@@ -35,7 +35,8 @@ const formatUserName = (username: string | undefined) => {
 export default function Index() {
   const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [userName, setUserName] = useState("a");
+  const [userName, setUserName] = useState("");
+  const [roomLabel, setRoomLabel] = useState("Määramata");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -48,27 +49,30 @@ export default function Index() {
         return;
       }
 
-      console.log(`${getApiBaseUrl()}/api/user/session`)
-      fetch(`${getApiBaseUrl()}/api/user/session`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }).then((res) => res.json()).then((data) => {
-        console.log(data)
-        if (data.success) {
-          setUserName(formatUserName(data.user.username));
-          console.log(userName)
+      try {
+        const response = await fetch(`${getApiBaseUrl()}/api/user/session`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setUserName(formatUserName(data.user.username || data.user.first_name));
+          console.log(data.user)
+          setRoomLabel(data.user.room_nr);
+          setIsAuthorized(true);
         } else {
           setIsAuthorized(false);
           router.replace("/(auth)/signin");
         }
-      }).catch((error) => {
+      } catch (error) {
         console.error("Failed to fetch user session:", error);
         setIsAuthorized(false);
         router.replace("/(auth)/signin");
-      })
+      }
 
-      setIsAuthorized(true);
       setIsAuthChecked(true);
     };
 
@@ -86,9 +90,8 @@ export default function Index() {
         <View style={{ paddingHorizontal: 24 }}>
           <Text style={{ fontFamily: "Poppins_700", fontSize: 24, paddingTop: 16 }}>{getGreeting()}, {userName}</Text>
           <View style={{ flexDirection: "row", gap: 8, paddingTop: 8 }}>
-            <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>Teie tuba:</Text><Text style={{ fontFamily: "Poppins_700", fontSize: 19 }}>312B</Text>
+            <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>Teie tuba:</Text><Text style={{ fontFamily: "Poppins_700", fontSize: 19 }}>{roomLabel}</Text>
           </View>
-          <Text style={{ fontFamily: "Poppins_400", fontSize: 19 }}>Teie toal on 3 kaebust viimase kuu jooksul.</Text>
 
           <Text style={{ fontFamily: "Poppins_700", fontSize: 24, paddingTop: 48 }}>Valige korrus</Text>
 
