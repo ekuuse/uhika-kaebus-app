@@ -13,6 +13,9 @@ const googleAuthClient = new OAuth2Client();
 class userController extends BaseController {
   constructor() {
     super();
+    this.getAllUsers = this.getAllUsers.bind(this);
+    this.adminCreateUser = this.adminCreateUser.bind(this);
+    this.deleteUser = this.deleteUser.bind(this);
     this.Register = this.Register.bind(this);
     this.Login = this.Login.bind(this);
     this.GoogleLogin = this.GoogleLogin.bind(this);
@@ -67,6 +70,85 @@ class userController extends BaseController {
     return candidate;
   }
 
+  async getAllUsers(req, res) {
+    this.handleRequest(req, res, async () => {
+      const users = await User.findAll({
+        attributes: { exclude: ['password', 'google_id'] },
+        order: [['id', 'ASC']],
+      });
+      return res.status(200).json({ success: true, users });
+    });
+  }
+
+  async adminCreateUser(req, res) {
+    this.handleRequest(req, res, async () => {
+      const { first_name, last_name, email, password, role, status } = req.body;
+
+      if (!first_name || !last_name || !email || !password || !role || !status) {
+        return res.status(400).json({ success: false, error: "All fields are required." });
+      }
+
+      if (!validator.isEmail(email)) {
+        return res.status(400).json({ message: "Invalid email format." });
+      }
+
+      const userExists = await User.findOne({ where: { email } });
+      if (userExists) {
+        return res.status(409).json({ success: false, error: "An account with this email already exists." });
+      }
+
+      try {
+        const hashedPassword = await Bun.password.hash(password, { algorithm: "argon2id" });
+        const username = await this.generateUniqueUsername(email.split("@")[0]);
+
+        const user = await User.create({
+          first_name,
+          last_name,
+          username,
+          email,
+          password: hashedPassword,
+          role,
+          status,
+        });
+
+        const userResponse = { ...user.get() };
+        delete userResponse.password;
+
+        return res.status(201).json({
+          success: true,
+          message: "User created successfully.",
+          user: userResponse,
+        });
+      } catch (dbErr) {
+        console.error("Database error occurred: ", dbErr);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to create user.",
+          error: dbErr.message,
+        });
+      }
+    });
+  }
+
+  async deleteUser(req, res) {
+    this.handleRequest(req, res, async () => {
+      const userId = Number(req.params.id);
+
+      if (!Number.isInteger(userId) || userId <= 0) {
+        return res.status(400).json({ success: false, error: "Invalid user id." });
+      }
+
+      const user = await User.findByPk(userId);
+
+      if (!user) {
+        return res.status(404).json({ success: false, error: "User not found." });
+      }
+
+      await user.destroy();
+
+      return res.status(200).json({ success: true, message: "User deleted successfully." });
+    });
+  }
 
   async Register(req, res) {
     this.handleRequest(req, res, async () => {
