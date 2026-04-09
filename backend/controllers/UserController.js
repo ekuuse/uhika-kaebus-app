@@ -1,5 +1,5 @@
 const { models } = require("../database");
-const { User } = models;
+const { User, Room } = models;
 const BaseController = require("./BaseController");
 const jwt = require("jsonwebtoken");
 // const bcrypt = require("bcrypt");
@@ -385,43 +385,63 @@ class userController extends BaseController {
   async UpdateRole(req, res) {
     this.handleRequest(req, res, async () => {
       const userId = Number(req.params.id);
-      const { role } = req.body;
-      const normalizedRole =
-        typeof role === "string" ? role.trim().toLowerCase() : role;
+      const { role, status, room_nr } = req.body;
 
       if (!Number.isInteger(userId) || userId <= 0) {
-        return res
-          .status(400)
-          .json({ success: false, error: "Invalid user id." });
-      }
-
-      if (typeof role !== "string" || !["user", "admin"].includes(normalizedRole)) {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid role. Allowed values: user, admin.",
-        });
+        return res.status(400).json({ success: false, error: "Invalid user id." });
       }
 
       const user = await User.findByPk(userId);
 
       if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, error: "User not found." });
+        return res.status(404).json({ success: false, error: "User not found." });
       }
 
-      user.role = normalizedRole;
+      if (role !== undefined) {
+        const normalizedRole = typeof role === "string" ? role.trim().toLowerCase() : role;
+        if (typeof role !== "string" || !["user", "admin"].includes(normalizedRole)) {
+          return res.status(400).json({
+            success: false,
+            error: "Invalid role. Allowed values: user, admin.",
+          });
+        }
+        user.role = normalizedRole;
+      }
+
+      if (status !== undefined) {
+        const normalizedStatus = typeof status === "string" ? status.trim().toLowerCase() : status;
+        if (typeof status !== "string" || !["pending", "denied", "accepted"].includes(normalizedStatus)) {
+          return res.status(400).json({
+            success: false,
+            error: "Invalid status. Allowed values: pending, denied, accepted.",
+          });
+        }
+        user.status = normalizedStatus;
+      }
+
+      if (room_nr !== undefined) {
+        if (room_nr !== null) {
+          if (typeof room_nr !== 'number' || !Number.isInteger(room_nr)) {
+            return res.status(400).json({ success: false, error: "Invalid room number." });
+          }
+          const roomExists = await Room.findOne({ where: { room_nr } });
+          if (!roomExists) {
+            return res.status(400).json({ success: false, error: `Room with number ${room_nr} does not exist.` });
+          }
+        }
+        user.room_nr = room_nr;
+      }
+
       await user.save();
+
+      const userResponse = { ...user.get() };
+      delete userResponse.password;
+      delete userResponse.google_id;
 
       return res.status(200).json({
         success: true,
-        message: "User role updated.",
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-        },
+        message: "User updated.",
+        user: userResponse,
       });
     });
   }

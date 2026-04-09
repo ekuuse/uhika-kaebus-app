@@ -40,21 +40,21 @@ const Users = () => {
         }
     };
 
-    const updateUserRole = (userId, newRole) => {
+    const updateUser = (userId, field, value) => {
         fetch(`${API_BASE_URL}/api/admin/users/${userId}/role`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem("admin_auth_token")}`
             },
-            body: JSON.stringify({ role: newRole })
+            body: JSON.stringify({ [field]: value })
         })
         .then(res => res.json())
         .then(data => {
             if (data.success) {
                 setUsers(users.map(user => user.id === userId ? data.user : user));
             } else {
-                console.error("Failed to update role:", data.error);
+                console.error(`Failed to update ${field}:`, data.error);
             }
         });
     };
@@ -91,6 +91,7 @@ const Users = () => {
                             <th className="poppins-bold p-2">Email</th>
                             <th className="poppins-bold p-2">Roll</th>
                             <th className="poppins-bold p-2">Staatus</th>
+                            <th className="poppins-bold p-2">Tuba</th>
                             <th className="poppins-bold p-2">Tegevused</th>
                         </tr>
                     </thead>
@@ -101,12 +102,32 @@ const Users = () => {
                                 <td className="p-2">{user.first_name} {user.last_name}</td>
                                 <td className="p-2">{user.email}</td>
                                 <td className="p-2">
-                                    <select value={user.role} onChange={(e) => updateUserRole(user.id, e.target.value)} className="p-1 rounded-md border-main">
+                                    <select value={user.role} onChange={(e) => updateUser(user.id, 'role', e.target.value)} className="p-1 rounded-md border-main">
                                         <option value="user">User</option>
                                         <option value="admin">Admin</option>
                                     </select>
                                 </td>
-                                <td className="p-2">{user.status}</td>
+                                <td className="p-2">
+                                    <select value={user.status} onChange={(e) => updateUser(user.id, 'status', e.target.value)} className="p-1 rounded-md border-main">
+                                        <option value="pending">Pending</option>
+                                        <option value="accepted">Accepted</option>
+                                        <option value="denied">Denied</option>
+                                    </select>
+                                </td>
+                                <td className="p-2">
+                                    <input 
+                                        type="number" 
+                                        defaultValue={user.room_nr || ''} 
+                                        onBlur={(e) => updateUser(user.id, 'room_nr', e.target.value ? parseInt(e.target.value) : null)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                updateUser(user.id, 'room_nr', e.target.value ? parseInt(e.target.value) : null);
+                                                e.target.blur(); 
+                                            }
+                                        }}
+                                        className="p-1 rounded-md border-main w-24" 
+                                    />
+                                </td>
                                 <td className="p-2">
                                     <button onClick={() => deleteUser(user.id)} className="text-red-500 hover:underline">Kustuta</button>
                                 </td>
